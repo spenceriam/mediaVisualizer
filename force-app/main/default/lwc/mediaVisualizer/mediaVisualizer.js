@@ -11,6 +11,7 @@ export default class MediaVisualizer extends LightningElement {
     rightMargin = 0.1250; // Static right margin value (in inches)
     cornerRadius = 0.1250; // Static corner radius value (in inches)
     shape = 'Square/Rectangle'; // Default shape for label
+    standardPerforation = 'Yes'; // Default value for standard perforation
 
     // Options for comboboxes
     mediaTypeOptions = [
@@ -28,6 +29,11 @@ export default class MediaVisualizer extends LightningElement {
         { label: 'Circular/Oval', value: 'Circular/Oval' },
         { label: 'Jewelry/Rat-tail', value: 'Jewelry/Rat-tail' },
         { label: 'Other', value: 'Other' }
+    ];
+    
+    perforationOptions = [
+        { label: 'Yes', value: 'Yes' },
+        { label: 'No', value: 'No' }
     ];
 
     // Computed property to determine if additional fields should be shown
@@ -53,8 +59,13 @@ export default class MediaVisualizer extends LightningElement {
             return;
         }
 
-        // Update the field value directly
-        this[fieldName] = event.target.value;
+        // Handle checkbox input differently since it uses 'checked' instead of 'value'
+        if (event.target.type === 'checkbox') {
+            this[fieldName] = event.target.checked;
+        } else {
+            // Update the field value directly for other input types
+            this[fieldName] = event.target.value;
+        }
 
         // Log the updated value for debugging
         console.log(`${fieldName} updated to: ${this[fieldName]}`);
@@ -73,6 +84,7 @@ export default class MediaVisualizer extends LightningElement {
         console.log(`Width: ${this.width}, Length: ${this.length}`);
         console.log(`Media Type: ${this.mediaType}`);
         console.log(`Shape: ${this.shape}`);
+        console.log(`Standard Perforation: ${this.standardPerforation}`);
 
         // Validate required fields
         if (this.width == null || this.length == null) {
@@ -106,7 +118,18 @@ export default class MediaVisualizer extends LightningElement {
             console.error('Render container not found!');
             return;
         }
-
+        
+        // Determine number of labels to display based on length (for both perforated and non-perforated)
+        let numLabelsToShow = 3; // Default
+        if (this.mediaType === 'Label') {
+            if (this.length > 5) {
+                numLabelsToShow = 1; // Show only 1 label if length > 5 inches
+            } else if (this.length > 3) {
+                numLabelsToShow = 2; // Show 2 labels if length > 3 inches but <= 5 inches
+            }
+            // Otherwise show 3 labels (default)
+        }
+        
         // Create a more uniform padding that's proportional to the dimensions
         // Use the same percentage for width and height to ensure uniform padding
         const paddingPercentage = 0.15; // 15% padding on all sides
@@ -114,14 +137,24 @@ export default class MediaVisualizer extends LightningElement {
         
         // Calculate padding based on the dimensions
         const widthPadding = Math.max(validatedLinerWidth * paddingPercentage, minPadding);
-        const heightPadding = Math.max(validatedLinerHeight * paddingPercentage, minPadding);
+        
+        // For multi-label display, adjust height padding
+        let heightPadding;
+        if (this.mediaType === 'Label' && numLabelsToShow > 1) {
+            // Add space for (numLabelsToShow - 1) additional labels
+            heightPadding = Math.max(validatedLinerHeight * paddingPercentage, minPadding) + 
+                            validatedLinerHeight * 0.5;
+        } else {
+            heightPadding = Math.max(validatedLinerHeight * paddingPercentage, minPadding);
+        }
         
         // Add extra height for the note text (at least 40px)
         const noteHeight = 40;
         
         // Dynamically size the container based on the dimensions plus padding
         const containerWidth = validatedLinerWidth + (widthPadding * 2);
-        const containerHeight = validatedLinerHeight + (heightPadding * 2) + noteHeight;
+        const containerHeight = validatedLinerHeight * (this.mediaType === 'Label' ? numLabelsToShow : 1) + 
+                               (heightPadding * 2) + noteHeight;
 
         // Make container visible and set its properties
         container.style.width = `${containerWidth}px`;
@@ -141,10 +174,10 @@ export default class MediaVisualizer extends LightningElement {
         // Create a wrapper for the visualization that centers content
         const visualWrapper = document.createElement('div');
         visualWrapper.style.position = 'absolute';
-        visualWrapper.style.top = `${heightPadding}px`;
+        visualWrapper.style.top = `${heightPadding - (this.mediaType === 'Label' && numLabelsToShow > 1 ? validatedLinerHeight / 2 : 0)}px`;
         visualWrapper.style.left = `${widthPadding}px`;
         visualWrapper.style.width = `${validatedLinerWidth}px`;
-        visualWrapper.style.height = `${validatedLinerHeight}px`;
+        visualWrapper.style.height = `${this.mediaType === 'Label' ? validatedLinerHeight * numLabelsToShow : validatedLinerHeight}px`;
         container.appendChild(visualWrapper);
 
         // Create a separate container for the note text
@@ -173,60 +206,78 @@ export default class MediaVisualizer extends LightningElement {
 
         // Render based on Media Type
         if (this.mediaType === 'Label') {
-            // Render Liner and Label
-            const liner = document.createElement('div');
-            liner.style.width = `${validatedLinerWidth}px`;
-            liner.style.height = `${validatedLinerHeight}px`;
-            liner.style.backgroundColor = '#FFF9DB'; // Liner color
-            liner.style.position = 'absolute'; // Absolute position within the visual wrapper
-            liner.style.top = '0';
-            liner.style.left = '0';
-            liner.style.display = 'flex';
-            liner.style.alignItems = 'center';
-            liner.style.justifyContent = 'center';
-            liner.style.boxSizing = 'border-box';
-
-            // Set individual border styles for dashed top/bottom and solid left/right
-            liner.style.borderTop = '2px dashed #000';
-            liner.style.borderBottom = '2px dashed #000';
-            liner.style.borderLeft = '2px solid #000';
-            liner.style.borderRight = '2px solid #000';
-
-            if (this.shape === 'Jewelry/Rat-tail') {
-                // Outer wrapper for the border
-                const outerWrapper = document.createElement('div');
-                outerWrapper.style.width = `${labelWidth}px`;
-                outerWrapper.style.height = `${labelHeight}px`;
-                outerWrapper.style.backgroundColor = '#000';
-                outerWrapper.style.position = 'relative';
-                outerWrapper.style.display = 'flex';
-                outerWrapper.style.alignItems = 'center';
-                outerWrapper.style.justifyContent = 'center';
-                outerWrapper.style.clipPath = 'polygon(0% 0%, 20% 0%, 50% 25%, 80% 0%, 100% 0%, 100% 100%, 80% 100%, 50% 75%, 20% 100%, 0% 100%)';
-
-                // Inner clipped shape
-                const innerShape = document.createElement('div');
-                innerShape.style.width = `${labelWidth - 6}px`;
-                innerShape.style.height = `${labelHeight - 6}px`;
-                innerShape.style.backgroundColor = '#FFFFFF';
-                innerShape.style.clipPath = 'polygon(0% 0%, 20% 0%, 50% 25%, 80% 0%, 100% 0%, 100% 100%, 80% 100%, 50% 75%, 20% 100%, 0% 100%)';
-                innerShape.style.margin = '3px';
-
-                outerWrapper.appendChild(innerShape);
-                liner.appendChild(outerWrapper);
+            // Determine if we should use perforations or not
+            const hasPerforations = this.standardPerforation === 'Yes';
+            
+            if (numLabelsToShow === 1) {
+                // Just render a single liner
+                this.renderSingleLiner(visualWrapper, validatedLinerWidth, validatedLinerHeight, labelWidth, labelHeight, scaleFactor, hasPerforations);
+                
+                // For a single liner, add dashed border on top and bottom if perforated
+                if (hasPerforations) {
+                    const singleLiner = visualWrapper.firstChild;
+                    singleLiner.style.borderTop = '2px dashed #000';
+                    singleLiner.style.borderBottom = '2px dashed #000';
+                }
+            } else if (numLabelsToShow === 2) {
+                // Render 2 liners
+                const topLiner = this.createLiner(validatedLinerWidth, validatedLinerHeight, labelWidth, labelHeight, scaleFactor, false);
+                topLiner.style.top = '0';
+                
+                const bottomLiner = this.createLiner(validatedLinerWidth, validatedLinerHeight, labelWidth, labelHeight, scaleFactor, false);
+                bottomLiner.style.top = `${validatedLinerHeight}px`;
+                
+                visualWrapper.appendChild(topLiner);
+                visualWrapper.appendChild(bottomLiner);
+                
+                // Add perforation lines if needed
+                if (hasPerforations) {
+                    // Add dashed line between two liners
+                    const perforationLine = document.createElement('div');
+                    perforationLine.style.position = 'absolute';
+                    perforationLine.style.left = '0';
+                    perforationLine.style.top = `${validatedLinerHeight}px`;
+                    perforationLine.style.width = '100%';
+                    perforationLine.style.borderTop = '2px dashed #000';
+                    visualWrapper.appendChild(perforationLine);
+                    
+                    // Add top and bottom dashed lines
+                    topLiner.style.borderTop = '2px dashed #000';
+                    bottomLiner.style.borderBottom = '2px dashed #000';
+                }
             } else {
-                const label = document.createElement('div');
-                label.style.width = `${labelWidth}px`;
-                label.style.height = `${labelHeight}px`;
-                label.style.backgroundColor = '#FFFFFF';
-                label.style.position = 'relative';
-                label.style.border = '2px solid #000';
-                label.style.borderRadius = this.shape === 'Circular/Oval' ? '50%' : `${this.cornerRadius * scaleFactor}px`;
-                label.style.boxSizing = 'border-box';
-                liner.appendChild(label);
+                // Render 3 liners (default)
+                const topLiner = this.createLiner(validatedLinerWidth, validatedLinerHeight, labelWidth, labelHeight, scaleFactor, false);
+                topLiner.style.top = '0';
+                
+                const middleLiner = this.createLiner(validatedLinerWidth, validatedLinerHeight, labelWidth, labelHeight, scaleFactor, false);
+                middleLiner.style.top = `${validatedLinerHeight}px`;
+                
+                const bottomLiner = this.createLiner(validatedLinerWidth, validatedLinerHeight, labelWidth, labelHeight, scaleFactor, false);
+                bottomLiner.style.top = `${validatedLinerHeight * 2}px`;
+                
+                visualWrapper.appendChild(topLiner);
+                visualWrapper.appendChild(middleLiner);
+                visualWrapper.appendChild(bottomLiner);
+                
+                // Add perforation lines if needed
+                if (hasPerforations) {
+                    // Add dashed lines between liners
+                    for (let i = 1; i < 3; i++) {
+                        const perforationLine = document.createElement('div');
+                        perforationLine.style.position = 'absolute';
+                        perforationLine.style.left = '0';
+                        perforationLine.style.top = `${validatedLinerHeight * i}px`;
+                        perforationLine.style.width = '100%';
+                        perforationLine.style.borderTop = '2px dashed #000';
+                        visualWrapper.appendChild(perforationLine);
+                    }
+                    
+                    // Add top and bottom dashed lines
+                    topLiner.style.borderTop = '2px dashed #000';
+                    bottomLiner.style.borderBottom = '2px dashed #000';
+                }
             }
-
-            visualWrapper.appendChild(liner);
         } else if (this.mediaType === 'Tag') {
             // Render Tag
             const tag = document.createElement('div');
@@ -248,5 +299,76 @@ export default class MediaVisualizer extends LightningElement {
         }
 
         console.log('Design rendered.');
+    }
+
+    // Helper method to create a liner with a label
+    createLiner(linerWidth, linerHeight, labelWidth, labelHeight, scaleFactor, hasPerforations) {
+        const liner = document.createElement('div');
+        liner.style.width = `${linerWidth}px`;
+        liner.style.height = `${linerHeight}px`;
+        liner.style.backgroundColor = '#FFF9DB'; // Liner color
+        liner.style.position = 'absolute';
+        liner.style.left = '0';
+        liner.style.display = 'flex';
+        liner.style.alignItems = 'center';
+        liner.style.justifyContent = 'center';
+        liner.style.boxSizing = 'border-box';
+
+        // Set border styles based on whether perforations are needed
+        if (hasPerforations) {
+            // Only apply top border if it's the first liner
+            liner.dataset.perfType = 'perforated';
+        } else {
+            liner.style.borderTop = '1px solid transparent';
+            liner.style.borderBottom = '1px solid transparent';
+        }
+        
+        // Always have solid borders on left and right
+        liner.style.borderLeft = '2px solid #000';
+        liner.style.borderRight = '2px solid #000';
+
+        // Add label based on shape
+        if (this.shape === 'Jewelry/Rat-tail') {
+            // Outer wrapper for the border
+            const outerWrapper = document.createElement('div');
+            outerWrapper.style.width = `${labelWidth}px`;
+            outerWrapper.style.height = `${labelHeight}px`;
+            outerWrapper.style.backgroundColor = '#000';
+            outerWrapper.style.position = 'relative';
+            outerWrapper.style.display = 'flex';
+            outerWrapper.style.alignItems = 'center';
+            outerWrapper.style.justifyContent = 'center';
+            outerWrapper.style.clipPath = 'polygon(0% 0%, 20% 0%, 50% 25%, 80% 0%, 100% 0%, 100% 100%, 80% 100%, 50% 75%, 20% 100%, 0% 100%)';
+
+            // Inner clipped shape
+            const innerShape = document.createElement('div');
+            innerShape.style.width = `${labelWidth - 6}px`;
+            innerShape.style.height = `${labelHeight - 6}px`;
+            innerShape.style.backgroundColor = '#FFFFFF';
+            innerShape.style.clipPath = 'polygon(0% 0%, 20% 0%, 50% 25%, 80% 0%, 100% 0%, 100% 100%, 80% 100%, 50% 75%, 20% 100%, 0% 100%)';
+            innerShape.style.margin = '3px';
+
+            outerWrapper.appendChild(innerShape);
+            liner.appendChild(outerWrapper);
+        } else {
+            const label = document.createElement('div');
+            label.style.width = `${labelWidth}px`;
+            label.style.height = `${labelHeight}px`;
+            label.style.backgroundColor = '#FFFFFF';
+            label.style.position = 'relative';
+            label.style.border = '2px solid #000';
+            label.style.borderRadius = this.shape === 'Circular/Oval' ? '50%' : `${this.cornerRadius * scaleFactor}px`;
+            label.style.boxSizing = 'border-box';
+            liner.appendChild(label);
+        }
+
+        return liner;
+    }
+
+    // Helper method to render a single liner (used for standard perforation = Yes)
+    renderSingleLiner(parent, linerWidth, linerHeight, labelWidth, labelHeight, scaleFactor, hasPerforations) {
+        const liner = this.createLiner(linerWidth, linerHeight, labelWidth, labelHeight, scaleFactor, hasPerforations);
+        liner.style.top = '0';
+        parent.appendChild(liner);
     }
 }

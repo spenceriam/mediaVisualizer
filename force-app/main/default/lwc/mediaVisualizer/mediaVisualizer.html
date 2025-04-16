@@ -76,14 +76,30 @@
                     disabled>
                 </lightning-input>
 
-                <!-- Shape -->
-                <lightning-combobox 
-                    label="Shape" 
-                    value={shape} 
-                    options={shapeOptions} 
-                    data-field="shape" 
-                    onchange={handleInputChange}>
-                </lightning-combobox>
+                <!-- Two fields side by side using flexbox -->
+                <div style="display: flex; gap: 12px;">
+                    <!-- Shape -->
+                    <div style="flex: 1;">
+                        <lightning-combobox 
+                            label="Shape" 
+                            value={shape} 
+                            options={shapeOptions} 
+                            data-field="shape" 
+                            onchange={handleInputChange}>
+                        </lightning-combobox>
+                    </div>
+                    
+                    <!-- Standard Perforation -->
+                    <div style="flex: 1;">
+                        <lightning-combobox 
+                            label="Standard perforation?" 
+                            value={standardPerforation} 
+                            options={perforationOptions} 
+                            data-field="standardPerforation" 
+                            onchange={handleInputChange}>
+                        </lightning-combobox>
+                    </div>
+                </div>
             </template>
 
             <div class="render-button">
