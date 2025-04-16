@@ -1,0 +1,31 @@
+/* Styles for the form fields */
+.form {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* Defines 4 equal columns */
+    gap: 20px; /* Adds spacing between fields */
+    padding: 20px; /* Adds padding around the form */
+}
+
+/* Input fields and dropdowns */
+.lightning-input,
+.lightning-combobox {
+    width: 100%; /* Ensures each field spans its grid cell */
+}
+
+/* Render Design Button Row */
+.render-button {
+    grid-column: span 4; /* Makes the button span all 4 columns */
+    text-align: center; /* Centers the button horizontally */
+    margin-top: 20px; /* Adds spacing above the button */
+}
+
+/* Rendering Container */
+.render-container {
+    display: none; /* Hide the container by default */
+    width: 800px; /* Fixed width (will be dynamically updated) */
+    height: 800px; /* Fixed height (will be dynamically updated) */
+    background-color: #ffffff; /* Background color for visibility */
+    position: relative;
+    margin: 0 auto;
+    border: 1px solid #000;
+}

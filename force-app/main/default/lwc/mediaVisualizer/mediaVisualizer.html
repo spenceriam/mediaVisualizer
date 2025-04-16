@@ -1,0 +1,99 @@
+<template>
+    <lightning-card title="Media Visualizer">
+        <div class="form">
+            <!-- Media Type -->
+            <lightning-combobox 
+                label="Media Type" 
+                value={mediaType} 
+                options={mediaTypeOptions} 
+                data-field="mediaType" 
+                onchange={handleInputChange}>
+            </lightning-combobox>
+
+            <!-- Finished Format -->
+            <lightning-combobox 
+                label="Finished Format" 
+                value={finishedFormat} 
+                options={finishedFormatOptions} 
+                data-field="finishedFormat" 
+                onchange={handleInputChange}>
+            </lightning-combobox>
+
+            <!-- Width -->
+            <lightning-input 
+                label="Width (inches)" 
+                type="number" 
+                value={width} 
+                data-field="width" 
+                step="0.0001" 
+                onchange={handleInputChange}>
+            </lightning-input>
+
+            <!-- Length -->
+            <lightning-input 
+                label="Length (inches)" 
+                type="number" 
+                value={length} 
+                data-field="length" 
+                step="0.0001" 
+                onchange={handleInputChange}>
+            </lightning-input>
+
+            <template if:true={isLabel}>
+                <!-- Gap Down -->
+                <lightning-input 
+                    label="Gap Down (inches)" 
+                    type="number" 
+                    value={gapDown} 
+                    step="0.0001" 
+                    disabled>
+                </lightning-input>
+
+                <!-- Left Margin -->
+                <lightning-input 
+                    label="Left Margin (inches)" 
+                    type="number" 
+                    value={leftMargin} 
+                    step="0.0001" 
+                    disabled>
+                </lightning-input>
+
+                <!-- Right Margin -->
+                <lightning-input 
+                    label="Right Margin (inches)" 
+                    type="number" 
+                    value={rightMargin} 
+                    step="0.0001" 
+                    disabled>
+                </lightning-input>
+
+                <!-- Corner Radius -->
+                <lightning-input 
+                    label="Corner Radius (inches)" 
+                    type="number" 
+                    value={cornerRadius} 
+                    step="0.0001" 
+                    disabled>
+                </lightning-input>
+
+                <!-- Shape -->
+                <lightning-combobox 
+                    label="Shape" 
+                    value={shape} 
+                    options={shapeOptions} 
+                    data-field="shape" 
+                    onchange={handleInputChange}>
+                </lightning-combobox>
+            </template>
+
+            <div class="render-button">
+                <lightning-button label="Render Design" onclick={handleRenderDesign}></lightning-button>
+            </div>
+        </div>
+
+        <!-- Rendering Container with better spacing -->
+        <div class="render-container-wrapper" style="padding: 20px; overflow: auto;">
+            <div class="render-container" style="margin: 0 auto; min-height: 200px;"></div>
+        </div>
+    </lightning-card>
+</template>

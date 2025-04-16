@@ -46,10 +46,10 @@ The component uses:
 
 ## Development
 
-This project is developed using Salesforce CLI. You can deploy it to a Salesforce org using:
+This project is developed using Salesforce DX. You can deploy it to a Salesforce org using:
 
 ```bash
-sf deploy metadata --source-dir force-app --verbose
+sfdx force:source:deploy -p force-app
 ```
 
 ## Disclaimer
