@@ -73,6 +73,14 @@ export default class MediaVisualizer extends LightningElement {
         // Specifically log if mediaType or shape is updated
         if (fieldName === 'mediaType') {
             console.log(`Media Type updated to: ${this.mediaType}`);
+            
+            // Clear the render container when Media Type changes
+            const container = this.template.querySelector('.render-container');
+            if (container) {
+                container.innerHTML = ''; // Clear any existing content
+                container.style.display = 'none'; // Hide the container
+                console.log('Render container cleared due to Media Type change');
+            }
         }
         if (fieldName === 'shape') {
             console.log(`Shape updated to: ${this.shape}`);
@@ -119,42 +127,33 @@ export default class MediaVisualizer extends LightningElement {
             return;
         }
         
-        // Determine number of labels to display based on length (for both perforated and non-perforated)
+        // Determine number of labels/tags to display based on length
         let numLabelsToShow = 3; // Default
-        if (this.mediaType === 'Label') {
-            if (this.length > 5) {
-                numLabelsToShow = 1; // Show only 1 label if length > 5 inches
-            } else if (this.length > 3) {
-                numLabelsToShow = 2; // Show 2 labels if length > 3 inches but <= 5 inches
-            }
-            // Otherwise show 3 labels (default)
+        if (this.length > 5) {
+            numLabelsToShow = 1; // Show only 1 label/tag if length > 5 inches
+        } else if (this.length > 3) {
+            numLabelsToShow = 2; // Show 2 labels/tags if length > 3 inches but <= 5 inches
         }
+        // Otherwise show 3 labels/tags (default)
         
-        // Create a more uniform padding that's proportional to the dimensions
-        // Use the same percentage for width and height to ensure uniform padding
-        const paddingPercentage = 0.15; // 15% padding on all sides
-        const minPadding = 40; // Minimum padding in pixels
+        // Set fixed padding values instead of calculated ones
+        const horizontalPadding = 40; // Fixed horizontal padding on both sides
+        const topPadding = 40; // Fixed padding at top
         
-        // Calculate padding based on the dimensions
-        const widthPadding = Math.max(validatedLinerWidth * paddingPercentage, minPadding);
+        // Adjust bottom padding based on width - narrower widths need more padding for wrapped text
+        let bottomPadding = 50; // Default bottom padding
         
-        // For multi-label display, adjust height padding
-        let heightPadding;
-        if (this.mediaType === 'Label' && numLabelsToShow > 1) {
-            // Add space for (numLabelsToShow - 1) additional labels
-            heightPadding = Math.max(validatedLinerHeight * paddingPercentage, minPadding) + 
-                            validatedLinerHeight * 0.5;
-        } else {
-            heightPadding = Math.max(validatedLinerHeight * paddingPercentage, minPadding);
+        // If the width is narrow enough that the note text might wrap to two lines, increase padding
+        if (validatedLinerWidth < 300) {
+            bottomPadding = 70; // Increased padding for narrow widths
         }
+
+        // Calculate the height needed for labels/tags
+        const totalLabelsHeight = validatedLinerHeight * numLabelsToShow;
         
-        // Add extra height for the note text (at least 40px)
-        const noteHeight = 40;
-        
-        // Dynamically size the container based on the dimensions plus padding
-        const containerWidth = validatedLinerWidth + (widthPadding * 2);
-        const containerHeight = validatedLinerHeight * (this.mediaType === 'Label' ? numLabelsToShow : 1) + 
-                               (heightPadding * 2) + noteHeight;
+        // Fixed container dimensions with consistent padding
+        const containerWidth = validatedLinerWidth + (horizontalPadding * 2);
+        const containerHeight = totalLabelsHeight + topPadding + bottomPadding;
 
         // Make container visible and set its properties
         container.style.width = `${containerWidth}px`;
@@ -162,44 +161,44 @@ export default class MediaVisualizer extends LightningElement {
         container.style.position = 'relative';
         container.style.margin = '0 auto';
         container.style.display = 'block';
-        container.style.backgroundColor = '#f4f4f4';
+        container.style.backgroundColor = '#828282';
         container.style.border = '1px solid #ddd';
         container.style.borderRadius = '5px';
-        container.style.overflow = 'hidden'; // Ensure content doesn't flow outside
+        container.style.overflow = 'hidden';
         container.style.boxSizing = 'border-box';
 
         // Clear the container
         container.innerHTML = '';
 
-        // Create a wrapper for the visualization that centers content
+        // Create a wrapper for the visualization with fixed positioning
         const visualWrapper = document.createElement('div');
         visualWrapper.style.position = 'absolute';
-        visualWrapper.style.top = `${heightPadding - (this.mediaType === 'Label' && numLabelsToShow > 1 ? validatedLinerHeight / 2 : 0)}px`;
-        visualWrapper.style.left = `${widthPadding}px`;
+        visualWrapper.style.top = `${topPadding}px`; // Fixed top padding
+        visualWrapper.style.left = `${horizontalPadding}px`; // Fixed left padding
         visualWrapper.style.width = `${validatedLinerWidth}px`;
-        visualWrapper.style.height = `${this.mediaType === 'Label' ? validatedLinerHeight * numLabelsToShow : validatedLinerHeight}px`;
+        visualWrapper.style.height = `${totalLabelsHeight}px`;
         container.appendChild(visualWrapper);
 
-        // Create a separate container for the note text
+        // Create a separate container for the note text - adjust bottom position based on width
         const noteContainer = document.createElement('div');
         noteContainer.style.position = 'absolute';
-        noteContainer.style.bottom = '10px';
+        noteContainer.style.bottom = validatedLinerWidth < 300 ? '25px' : '15px'; // More space from bottom when narrow
         noteContainer.style.left = '0';
         noteContainer.style.width = '100%';
         noteContainer.style.textAlign = 'center';
-        noteContainer.style.padding = '10px';
+        noteContainer.style.padding = '0';
         noteContainer.style.boxSizing = 'border-box';
 
         const noteText = document.createElement('div');
         noteText.innerText = 'Note: Not to actual scale. This render does not reflect the final drawing after purchasing';
-        noteText.style.fontSize = '12px';
+        noteText.style.fontSize = '11px';
         noteText.style.color = '#666';
         noteText.style.fontStyle = 'italic';
         noteText.style.fontWeight = 'bold';
-        noteText.style.backgroundColor = 'rgba(255, 255, 255, 0.8)'; // Semi-transparent background
-        noteText.style.padding = '5px';
+        noteText.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+        noteText.style.padding = '3px';
         noteText.style.borderRadius = '3px';
-        noteText.style.display = 'inline-block'; // To make background only as wide as text
+        noteText.style.display = 'inline-block';
         
         noteContainer.appendChild(noteText);
         container.appendChild(noteContainer);
@@ -279,23 +278,117 @@ export default class MediaVisualizer extends LightningElement {
                 }
             }
         } else if (this.mediaType === 'Tag') {
-            // Render Tag
-            const tag = document.createElement('div');
-            tag.style.width = `${validatedLinerWidth}px`;
-            tag.style.height = `${validatedLinerHeight}px`;
-            tag.style.backgroundColor = '#FDF5E6'; // Off-white/beige color
-            tag.style.position = 'absolute';
-            tag.style.top = '0';
-            tag.style.left = '0';
-            tag.style.boxSizing = 'border-box';
-
-            // Set dashed borders on top and bottom (like a liner)
-            tag.style.borderTop = '2px dashed #000';
-            tag.style.borderBottom = '2px dashed #000';
-            tag.style.borderLeft = '2px solid #000';
-            tag.style.borderRight = '2px solid #000';
-            
-            visualWrapper.appendChild(tag);
+            // Render Tags - no liners, no margins, no gap down for tags
+            if (numLabelsToShow === 1) {
+                // Just render a single tag
+                const tag = document.createElement('div');
+                tag.style.width = `${validatedLinerWidth}px`;
+                tag.style.height = `${validatedLinerHeight}px`;
+                tag.style.backgroundColor = '#FDF5E6'; // Off-white/beige color
+                tag.style.position = 'absolute';
+                tag.style.top = '0';
+                tag.style.left = '0';
+                tag.style.boxSizing = 'border-box';
+                tag.style.border = '2px solid #000'; // Solid border all around
+                
+                // Set dashed borders on top and bottom
+                tag.style.borderTop = '2px dashed #000';
+                tag.style.borderBottom = '2px dashed #000';
+                
+                visualWrapper.appendChild(tag);
+            } else if (numLabelsToShow === 2) {
+                // Render 2 tags
+                const topTag = document.createElement('div');
+                topTag.style.width = `${validatedLinerWidth}px`;
+                topTag.style.height = `${validatedLinerHeight}px`;
+                topTag.style.backgroundColor = '#FDF5E6'; // Off-white/beige color
+                topTag.style.position = 'absolute';
+                topTag.style.top = '0';
+                topTag.style.left = '0';
+                topTag.style.boxSizing = 'border-box';
+                topTag.style.borderTop = '2px dashed #000';
+                topTag.style.borderLeft = '2px solid #000';
+                topTag.style.borderRight = '2px solid #000';
+                
+                const bottomTag = document.createElement('div');
+                bottomTag.style.width = `${validatedLinerWidth}px`;
+                bottomTag.style.height = `${validatedLinerHeight}px`;
+                bottomTag.style.backgroundColor = '#FDF5E6'; // Off-white/beige color
+                bottomTag.style.position = 'absolute';
+                bottomTag.style.top = `${validatedLinerHeight}px`;
+                bottomTag.style.left = '0';
+                bottomTag.style.boxSizing = 'border-box';
+                bottomTag.style.borderBottom = '2px dashed #000';
+                bottomTag.style.borderLeft = '2px solid #000';
+                bottomTag.style.borderRight = '2px solid #000';
+                
+                // Add perforation line between tags
+                const perforationLine = document.createElement('div');
+                perforationLine.style.position = 'absolute';
+                perforationLine.style.left = '0';
+                perforationLine.style.top = `${validatedLinerHeight}px`;
+                perforationLine.style.width = `${validatedLinerWidth}px`;
+                perforationLine.style.height = '0';
+                perforationLine.style.borderTop = '2px dashed #000';
+                perforationLine.style.zIndex = '2'; // Ensure it's on top
+                
+                visualWrapper.appendChild(topTag);
+                visualWrapper.appendChild(bottomTag);
+                visualWrapper.appendChild(perforationLine);
+            } else {
+                // Render 3 tags (default)
+                const topTag = document.createElement('div');
+                topTag.style.width = `${validatedLinerWidth}px`;
+                topTag.style.height = `${validatedLinerHeight}px`;
+                topTag.style.backgroundColor = '#FDF5E6'; // Off-white/beige color
+                topTag.style.position = 'absolute';
+                topTag.style.top = '0';
+                topTag.style.left = '0';
+                topTag.style.boxSizing = 'border-box';
+                topTag.style.borderTop = '2px dashed #000';
+                topTag.style.borderLeft = '2px solid #000';
+                topTag.style.borderRight = '2px solid #000';
+                
+                const middleTag = document.createElement('div');
+                middleTag.style.width = `${validatedLinerWidth}px`;
+                middleTag.style.height = `${validatedLinerHeight}px`;
+                middleTag.style.backgroundColor = '#FDF5E6'; // Off-white/beige color
+                middleTag.style.position = 'absolute';
+                middleTag.style.top = `${validatedLinerHeight}px`;
+                middleTag.style.left = '0';
+                middleTag.style.boxSizing = 'border-box';
+                middleTag.style.borderLeft = '2px solid #000';
+                middleTag.style.borderRight = '2px solid #000';
+                
+                const bottomTag = document.createElement('div');
+                bottomTag.style.width = `${validatedLinerWidth}px`;
+                bottomTag.style.height = `${validatedLinerHeight}px`;
+                bottomTag.style.backgroundColor = '#FDF5E6'; // Off-white/beige color
+                bottomTag.style.position = 'absolute';
+                bottomTag.style.top = `${validatedLinerHeight * 2}px`;
+                bottomTag.style.left = '0';
+                bottomTag.style.boxSizing = 'border-box';
+                bottomTag.style.borderBottom = '2px dashed #000';
+                bottomTag.style.borderLeft = '2px solid #000';
+                bottomTag.style.borderRight = '2px solid #000';
+                
+                visualWrapper.appendChild(topTag);
+                visualWrapper.appendChild(middleTag);
+                visualWrapper.appendChild(bottomTag);
+                
+                // Add standalone perforation lines between tags
+                for (let i = 1; i < 3; i++) {
+                    const perforationLine = document.createElement('div');
+                    perforationLine.style.position = 'absolute';
+                    perforationLine.style.left = '0';
+                    perforationLine.style.top = `${validatedLinerHeight * i}px`;
+                    perforationLine.style.width = `${validatedLinerWidth}px`;
+                    perforationLine.style.height = '0';
+                    perforationLine.style.borderTop = '2px dashed #000';
+                    perforationLine.style.zIndex = '2'; // Ensure it's on top
+                    visualWrapper.appendChild(perforationLine);
+                }
+            }
         }
 
         console.log('Design rendered.');
@@ -306,7 +399,7 @@ export default class MediaVisualizer extends LightningElement {
         const liner = document.createElement('div');
         liner.style.width = `${linerWidth}px`;
         liner.style.height = `${linerHeight}px`;
-        liner.style.backgroundColor = '#FFF9DB'; // Liner color
+        liner.style.backgroundColor = '#f6f6f6'; // Updated from #eeeeeb to #f6f6f6
         liner.style.position = 'absolute';
         liner.style.left = '0';
         liner.style.display = 'flex';
