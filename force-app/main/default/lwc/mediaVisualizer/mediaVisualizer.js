@@ -12,6 +12,7 @@ export default class MediaVisualizer extends LightningElement {
     cornerRadius = 0.1250; // Static corner radius value (in inches)
     shape = 'Square/Rectangle'; // Default shape for label
     standardPerforation = 'Yes'; // Default value for standard perforation
+    sensingDetails = ''; // No default sensing details
 
     // Options for comboboxes
     mediaTypeOptions = [
@@ -36,9 +37,22 @@ export default class MediaVisualizer extends LightningElement {
         { label: 'No', value: 'No' }
     ];
 
+    sensingDetailsOptions = [
+        { label: 'Black Sensing Mark', value: 'Black Sensing Mark' },
+        { label: 'Left and Right Notches', value: 'Left and Right Notches' },
+        { label: 'Left only Notch', value: 'Left only Notch' },
+        { label: 'Right only Notch', value: 'Right only Notch' },
+        { label: 'Central Sensing Slot', value: 'Central Sensing Slot' }
+    ];
+
     // Computed property to determine if additional fields should be shown
     get isLabel() {
         return this.mediaType === 'Label';
+    }
+
+    // Computed property to determine if tag specific fields should be shown
+    get isTag() {
+        return this.mediaType === 'Tag';
     }
 
     // Lifecycle hook to ensure the canvas is hidden on page load
@@ -91,8 +105,13 @@ export default class MediaVisualizer extends LightningElement {
     handleRenderDesign() {
         console.log(`Width: ${this.width}, Length: ${this.length}`);
         console.log(`Media Type: ${this.mediaType}`);
-        console.log(`Shape: ${this.shape}`);
-        console.log(`Standard Perforation: ${this.standardPerforation}`);
+        
+        if (this.mediaType === 'Label') {
+            console.log(`Shape: ${this.shape}`);
+            console.log(`Standard Perforation: ${this.standardPerforation}`);
+        } else if (this.mediaType === 'Tag') {
+            console.log(`Sensing Details: ${this.sensingDetails}`);
+        }
 
         // Validate required fields
         if (this.width == null || this.length == null) {
@@ -296,6 +315,9 @@ export default class MediaVisualizer extends LightningElement {
                 tag.style.borderBottom = '2px dashed #000';
                 
                 visualWrapper.appendChild(tag);
+
+                // Add sensing details
+                this.renderTagWithSensingDetails(tag, validatedLinerWidth, validatedLinerHeight);
             } else if (numLabelsToShow === 2) {
                 // Render 2 tags
                 const topTag = document.createElement('div');
@@ -335,6 +357,10 @@ export default class MediaVisualizer extends LightningElement {
                 visualWrapper.appendChild(topTag);
                 visualWrapper.appendChild(bottomTag);
                 visualWrapper.appendChild(perforationLine);
+
+                // Add sensing details
+                this.renderTagWithSensingDetails(topTag, validatedLinerWidth, validatedLinerHeight);
+                this.renderTagWithSensingDetails(bottomTag, validatedLinerWidth, validatedLinerHeight);
             } else {
                 // Render 3 tags (default)
                 const topTag = document.createElement('div');
@@ -388,6 +414,11 @@ export default class MediaVisualizer extends LightningElement {
                     perforationLine.style.zIndex = '2'; // Ensure it's on top
                     visualWrapper.appendChild(perforationLine);
                 }
+
+                // Add sensing details
+                this.renderTagWithSensingDetails(topTag, validatedLinerWidth, validatedLinerHeight);
+                this.renderTagWithSensingDetails(middleTag, validatedLinerWidth, validatedLinerHeight);
+                this.renderTagWithSensingDetails(bottomTag, validatedLinerWidth, validatedLinerHeight);
             }
         }
 
@@ -463,5 +494,291 @@ export default class MediaVisualizer extends LightningElement {
         const liner = this.createLiner(linerWidth, linerHeight, labelWidth, labelHeight, scaleFactor, hasPerforations);
         liner.style.top = '0';
         parent.appendChild(liner);
+    }
+
+    // Handle the rendering of sensing details for tags
+    renderTagWithSensingDetails(tag, validatedLinerWidth, validatedLinerHeight) {
+        if (this.sensingDetails === 'Left and Right Notches') {
+            // Create rectangular cutouts aligned with perforation lines
+            
+            // Get perforation positions
+            const perforationPositions = [];
+            
+            // Add the top perforation position (dashed line)
+            perforationPositions.push(0); // Top edge of tag
+            
+            // If we have multiple tags stacked, add middle perforation positions
+            const parent = tag.parentNode;
+            if (parent && parent.children.length > 1) {
+                // Check if this is not the last tag
+                const tagIndex = Array.from(parent.children).indexOf(tag);
+                if (tagIndex < parent.children.length - 1) {
+                    perforationPositions.push(validatedLinerHeight); // Bottom edge of this tag
+                }
+            } else {
+                // Single tag case - add bottom position
+                perforationPositions.push(validatedLinerHeight); // Bottom edge of tag
+            }
+            
+            // Size of the notches - back to the previous preferred size
+            const notchWidth = 14;  // Height of the notch (vertical dimension)
+            const notchDepth = 40;  // Depth of the notch (how far it extends)
+            
+            // Create notches at each perforation point
+            perforationPositions.forEach(position => {
+                // Create a div to cover up the dashed line in the notch area
+                // Left notch cover
+                const leftNotchCover = document.createElement('div');
+                leftNotchCover.style.position = 'absolute';
+                leftNotchCover.style.left = '0px'; 
+                leftNotchCover.style.width = `${notchDepth}px`;
+                leftNotchCover.style.height = `${notchWidth}px`;
+                leftNotchCover.style.backgroundColor = '#828282'; // Same as background
+                leftNotchCover.style.top = position === 0 ? 
+                    `-${notchWidth/2}px` : // Center on the top perforation
+                    `${position - notchWidth/2}px`; // Center on other perforations
+                leftNotchCover.style.zIndex = '5'; // Higher z-index to cover the dashed line
+                
+                // Right notch cover
+                const rightNotchCover = document.createElement('div');
+                rightNotchCover.style.position = 'absolute';
+                rightNotchCover.style.right = '0px'; 
+                rightNotchCover.style.width = `${notchDepth}px`;
+                rightNotchCover.style.height = `${notchWidth}px`;
+                rightNotchCover.style.backgroundColor = '#828282'; // Same as background
+                rightNotchCover.style.top = position === 0 ? 
+                    `-${notchWidth/2}px` : // Center on the top perforation
+                    `${position - notchWidth/2}px`; // Center on other perforations
+                rightNotchCover.style.zIndex = '5'; // Higher z-index to cover the dashed line
+                
+                // Left notch cutout - create as background colored rectangle
+                const leftNotchCutout = document.createElement('div');
+                leftNotchCutout.style.position = 'absolute';
+                leftNotchCutout.style.left = `-${1}px`; // Slightly overlap with tag edge
+                leftNotchCutout.style.width = `${notchDepth}px`;
+                leftNotchCutout.style.height = `${notchWidth}px`;
+                leftNotchCutout.style.backgroundColor = '#828282'; // Same as background
+                leftNotchCutout.style.top = position === 0 ? 
+                    `-${notchWidth/2}px` : // Center on the top perforation
+                    `${position - notchWidth/2}px`; // Center on other perforations
+                leftNotchCutout.style.zIndex = '6'; // Even higher z-index
+                
+                // Right notch cutout
+                const rightNotchCutout = document.createElement('div');
+                rightNotchCutout.style.position = 'absolute';
+                rightNotchCutout.style.right = `-${1}px`; // Slightly overlap with tag edge
+                rightNotchCutout.style.width = `${notchDepth}px`;
+                rightNotchCutout.style.height = `${notchWidth}px`;
+                rightNotchCutout.style.backgroundColor = '#828282'; // Same as background
+                rightNotchCutout.style.top = position === 0 ? 
+                    `-${notchWidth/2}px` : // Center on the top perforation
+                    `${position - notchWidth/2}px`; // Center on other perforations
+                rightNotchCutout.style.zIndex = '6'; // Even higher z-index
+                
+                tag.appendChild(leftNotchCover);
+                tag.appendChild(rightNotchCover);
+                tag.appendChild(leftNotchCutout);
+                tag.appendChild(rightNotchCutout);
+            });
+        } else if (this.sensingDetails === 'Left only Notch') {
+            // Similar to both sides, but only create left notches
+            // Get perforation positions
+            const perforationPositions = [];
+            
+            // Add the top perforation position
+            perforationPositions.push(0); // Top edge of tag
+            
+            // If we have multiple tags stacked, add middle perforation positions
+            const parent = tag.parentNode;
+            if (parent && parent.children.length > 1) {
+                // Check if this is not the last tag
+                const tagIndex = Array.from(parent.children).indexOf(tag);
+                if (tagIndex < parent.children.length - 1) {
+                    perforationPositions.push(validatedLinerHeight); // Bottom edge of this tag
+                }
+            } else {
+                // Single tag case - add bottom position
+                perforationPositions.push(validatedLinerHeight); // Bottom edge of tag
+            }
+            
+            // Size of the notches - back to the previous preferred size
+            const notchWidth = 14;  // Height of the notch (vertical dimension)
+            const notchDepth = 40;  // Depth of the notch (how far it extends)
+            
+            // Create notches at each perforation point - left side only
+            perforationPositions.forEach(position => {
+                // Create a div to cover up the dashed line in the notch area
+                const leftNotchCover = document.createElement('div');
+                leftNotchCover.style.position = 'absolute';
+                leftNotchCover.style.left = '0px'; 
+                leftNotchCover.style.width = `${notchDepth}px`;
+                leftNotchCover.style.height = `${notchWidth}px`;
+                leftNotchCover.style.backgroundColor = '#828282'; // Same as background
+                leftNotchCover.style.top = position === 0 ? 
+                    `-${notchWidth/2}px` : // Center on the top perforation
+                    `${position - notchWidth/2}px`; // Center on other perforations
+                leftNotchCover.style.zIndex = '5'; // Higher z-index to cover the dashed line
+                
+                // Left notch - create as a cutout using background color
+                const leftNotchCutout = document.createElement('div');
+                leftNotchCutout.style.position = 'absolute';
+                leftNotchCutout.style.left = `-${1}px`; // Slightly overlap with tag edge
+                leftNotchCutout.style.width = `${notchDepth}px`;
+                leftNotchCutout.style.height = `${notchWidth}px`;
+                leftNotchCutout.style.backgroundColor = '#828282'; // Same as background
+                leftNotchCutout.style.top = position === 0 ? 
+                    `-${notchWidth/2}px` : // Center on the top perforation
+                    `${position - notchWidth/2}px`; // Center on other perforations
+                leftNotchCutout.style.zIndex = '6'; // Even higher z-index
+                
+                tag.appendChild(leftNotchCover);
+                tag.appendChild(leftNotchCutout);
+            });
+        } else if (this.sensingDetails === 'Right only Notch') {
+            // Similar to both sides, but only create right notches
+            // Get perforation positions
+            const perforationPositions = [];
+            
+            // Add the top perforation position
+            perforationPositions.push(0); // Top edge of tag
+            
+            // If we have multiple tags stacked, add middle perforation positions
+            const parent = tag.parentNode;
+            if (parent && parent.children.length > 1) {
+                // Check if this is not the last tag
+                const tagIndex = Array.from(parent.children).indexOf(tag);
+                if (tagIndex < parent.children.length - 1) {
+                    perforationPositions.push(validatedLinerHeight); // Bottom edge of this tag
+                }
+            } else {
+                // Single tag case - add bottom position
+                perforationPositions.push(validatedLinerHeight); // Bottom edge of tag
+            }
+            
+            // Size of the notches - back to the previous preferred size
+            const notchWidth = 14;  // Height of the notch (vertical dimension)
+            const notchDepth = 40;  // Depth of the notch (how far it extends)
+            
+            // Create notches at each perforation point - right side only
+            perforationPositions.forEach(position => {
+                // Create a div to cover up the dashed line in the notch area
+                const rightNotchCover = document.createElement('div');
+                rightNotchCover.style.position = 'absolute';
+                rightNotchCover.style.right = '0px'; 
+                rightNotchCover.style.width = `${notchDepth}px`;
+                rightNotchCover.style.height = `${notchWidth}px`;
+                rightNotchCover.style.backgroundColor = '#828282'; // Same as background
+                rightNotchCover.style.top = position === 0 ? 
+                    `-${notchWidth/2}px` : // Center on the top perforation
+                    `${position - notchWidth/2}px`; // Center on other perforations
+                rightNotchCover.style.zIndex = '5'; // Higher z-index to cover the dashed line
+                
+                // Right notch - create as a cutout
+                const rightNotchCutout = document.createElement('div');
+                rightNotchCutout.style.position = 'absolute';
+                rightNotchCutout.style.right = `-${1}px`; // Slightly overlap with tag edge
+                rightNotchCutout.style.width = `${notchDepth}px`;
+                rightNotchCutout.style.height = `${notchWidth}px`;
+                rightNotchCutout.style.backgroundColor = '#828282'; // Same as background
+                rightNotchCutout.style.top = position === 0 ? 
+                    `-${notchWidth/2}px` : // Center on the top perforation
+                    `${position - notchWidth/2}px`; // Center on other perforations
+                rightNotchCutout.style.zIndex = '6'; // Even higher z-index
+                
+                tag.appendChild(rightNotchCover);
+                tag.appendChild(rightNotchCutout);
+            });
+        } else if (this.sensingDetails === 'Black Sensing Mark') {
+            // Black sensing mark - only show one horizontal black bar at the bottom position
+            
+            // Size of the black bar
+            const barHeight = 10; // Height of the black bar
+            const barOffset = 20; // Offset from the perforation line (20px above)
+            
+            // Get the bottom perforation position
+            let bottomPosition;
+            
+            // Determine if this is a multi-tag setup
+            const parent = tag.parentNode;
+            if (parent && parent.children.length > 1) {
+                // Check if this is not the last tag
+                const tagIndex = Array.from(parent.children).indexOf(tag);
+                if (tagIndex < parent.children.length - 1) {
+                    bottomPosition = validatedLinerHeight; // Bottom edge of this tag
+                } else {
+                    bottomPosition = validatedLinerHeight; // Bottom edge of tag
+                }
+            } else {
+                // Single tag case
+                bottomPosition = validatedLinerHeight; // Bottom edge of tag
+            }
+            
+            // Create only one black bar at the bottom position
+            const blackBar = document.createElement('div');
+            blackBar.style.position = 'absolute';
+            blackBar.style.left = '0';
+            blackBar.style.width = '100%'; // Full width of the tag
+            blackBar.style.height = `${barHeight}px`;
+            blackBar.style.backgroundColor = '#000'; // Black color
+            blackBar.style.zIndex = '3';
+            
+            // Position the black bar 20px above the bottom perforation line
+            blackBar.style.top = `${bottomPosition - barOffset - barHeight}px`;
+            
+            tag.appendChild(blackBar);
+        } else if (this.sensingDetails === 'Central Sensing Slot') {
+            // Central sensing slots - at both top and bottom center
+            
+            // Size of the slot - using the same dimensions as notches for consistency
+            const slotWidth = 14;  // Height of the slot (vertical dimension)
+            const slotDepth = 20;  // Depth of the slot (half the notch depth since it's centered)
+            
+            // Create slot at the top center
+            // First create a div to cover the dashed line in the slot area
+            const topSlotCover = document.createElement('div');
+            topSlotCover.style.position = 'absolute';
+            topSlotCover.style.left = `${validatedLinerWidth / 2 - slotDepth}px`; // Center horizontally
+            topSlotCover.style.width = `${slotDepth * 2}px`; // Width spans both sides of center
+            topSlotCover.style.height = `${slotWidth}px`;
+            topSlotCover.style.backgroundColor = '#828282'; // Same as background
+            topSlotCover.style.top = `-${slotWidth/2}px`; // Center on the top perforation
+            topSlotCover.style.zIndex = '5'; // Higher z-index to cover the dashed line
+            
+            // Then create the actual top slot cutout
+            const topCentralSlot = document.createElement('div');
+            topCentralSlot.style.position = 'absolute';
+            topCentralSlot.style.left = `${validatedLinerWidth / 2 - slotDepth}px`; // Center horizontally
+            topCentralSlot.style.top = `-${slotWidth/2}px`; // Center on the top perforation
+            topCentralSlot.style.width = `${slotDepth * 2}px`; // Width spans both sides of center
+            topCentralSlot.style.height = `${slotWidth}px`;
+            topCentralSlot.style.backgroundColor = '#828282'; // Same as background color
+            topCentralSlot.style.zIndex = '6'; // Even higher z-index
+            
+            // Create slot at the bottom center
+            // First create a div to cover the dashed line in the slot area
+            const bottomSlotCover = document.createElement('div');
+            bottomSlotCover.style.position = 'absolute';
+            bottomSlotCover.style.left = `${validatedLinerWidth / 2 - slotDepth}px`; // Center horizontally
+            bottomSlotCover.style.width = `${slotDepth * 2}px`; // Width spans both sides of center
+            bottomSlotCover.style.height = `${slotWidth}px`;
+            bottomSlotCover.style.backgroundColor = '#828282'; // Same as background
+            bottomSlotCover.style.bottom = `-${slotWidth/2}px`; // Center on the bottom perforation
+            bottomSlotCover.style.zIndex = '5'; // Higher z-index to cover the dashed line
+            
+            // Then create the actual bottom slot cutout
+            const bottomCentralSlot = document.createElement('div');
+            bottomCentralSlot.style.position = 'absolute';
+            bottomCentralSlot.style.left = `${validatedLinerWidth / 2 - slotDepth}px`; // Center horizontally
+            bottomCentralSlot.style.bottom = `-${slotWidth/2}px`; // Center on the bottom perforation
+            bottomCentralSlot.style.width = `${slotDepth * 2}px`; // Width spans both sides of center
+            bottomCentralSlot.style.height = `${slotWidth}px`;
+            bottomCentralSlot.style.backgroundColor = '#828282'; // Same as background color
+            bottomCentralSlot.style.zIndex = '6'; // Even higher z-index
+            
+            tag.appendChild(topSlotCover);
+            tag.appendChild(topCentralSlot);
+            tag.appendChild(bottomSlotCover);
+            tag.appendChild(bottomCentralSlot);
+        }
     }
 }

@@ -39,6 +39,18 @@
                 onchange={handleInputChange}>
             </lightning-input>
 
+            <!-- Tag-specific fields - moved to appear after Length field -->
+            <template if:true={isTag}>
+                <!-- Sensing details -->
+                <lightning-combobox 
+                    label="Sensing details" 
+                    value={sensingDetails} 
+                    options={sensingDetailsOptions} 
+                    data-field="sensingDetails" 
+                    onchange={handleInputChange}>
+                </lightning-combobox>
+            </template>
+
             <template if:true={isLabel}>
                 <!-- Gap Down -->
                 <lightning-input 

@@ -14,6 +14,8 @@ MediaVisual is a tool designed to help visualize different types of media (Label
 - **Label-specific Settings**: 
   - Shape selection (Square/Rectangle, Circular/Oval, Jewelry/Rat-tail, Other)
   - Gap Down, Left Margin, Right Margin, and Corner Radius specifications
+- **Tag-specific Settings**:
+  - Sensing details selection (Black Sensing Mark, Left and Right Notches, Left only Notch, Right only Notch, Central Sensing Slot)
 - **Standard Perforation Option**: Choose whether to display standard perforations
 - **Multiple Label/Tag Display**: Shows 1-3 labels/tags based on length:
   - 3 labels/tags when length ≤ 3 inches
@@ -26,6 +28,12 @@ MediaVisual is a tool designed to help visualize different types of media (Label
 
 - **Labels**: Displayed with white center on light gray liner background with proper margins
 - **Tags**: Displayed at full width with beige background and dashed perforation lines
+- **Tag Sensing Details**:
+  - Black Sensing Mark: Horizontal black bar positioned 20px above bottom perforation
+  - Left and Right Notches: Rectangular cutouts (14px x 40px) on both sides at perforation lines
+  - Left only Notch: Rectangular cutout only on the left side at perforation lines
+  - Right only Notch: Rectangular cutout only on the right side at perforation lines
+  - Central Sensing Slot: Rectangular slots at both top and bottom center (40px wide)
 - **Responsive Layout**: Container sizing adapts based on dimensions with consistent padding
 - **Clear Canvas**: Visualization clears when switching between media types for a fresh render
 
@@ -35,7 +43,8 @@ MediaVisual is a tool designed to help visualize different types of media (Label
 2. Choose a Finished Format
 3. Enter the Width and Length measurements (in inches)
 4. If Label is selected, choose a Shape type and set Standard Perforation (Yes/No)
-5. Click "Render Design" to visualize the media
+5. If Tag is selected, choose a Sensing Details option
+6. Click "Render Design" to visualize the media
 
 ## Technical Details
 
@@ -59,6 +68,7 @@ The component uses:
 - All dimensions are converted from inches to pixels using a scaling factor of 96 (1 inch = 96 pixels)
 - Fixed padding ensures consistent layout across different dimension settings
 - Dynamic bottom padding adjusts for narrow visualizations where text may wrap
+- Sensing details for tags are rendered as cutouts or bars with specific positioning relative to perforation lines
 
 ## Development
 
