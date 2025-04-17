@@ -21,7 +21,7 @@
 
             <!-- Width -->
             <lightning-input 
-                label="Width (inches)" 
+                label="Width" 
                 type="number" 
                 value={width} 
                 data-field="width" 
@@ -31,13 +31,23 @@
 
             <!-- Length -->
             <lightning-input 
-                label="Length (inches)" 
+                label="Length" 
                 type="number" 
                 value={length} 
                 data-field="length" 
                 step="0.0001" 
                 onchange={handleInputChange}>
             </lightning-input>
+
+            <!-- Measurement Unit Radio Group - moved outside conditional blocks to show for both Label and Tag -->
+            <lightning-radio-group
+                label="Measurement unit"
+                options={measurementUnitOptions}
+                value={measurementUnit}
+                data-field="measurementUnit"
+                type="radio"
+                onchange={handleInputChange}>
+            </lightning-radio-group>
 
             <!-- Tag-specific fields - moved to appear after Length field -->
             <template if:true={isTag}>
@@ -54,38 +64,42 @@
             <template if:true={isLabel}>
                 <!-- Gap Down -->
                 <lightning-input 
-                    label="Gap Down (inches)" 
+                    label="Gap Down" 
                     type="number" 
                     value={gapDown} 
                     step="0.0001" 
-                    disabled>
+                    data-field="gapDown"
+                    onchange={handleInputChange}>
                 </lightning-input>
 
                 <!-- Left Margin -->
                 <lightning-input 
-                    label="Left Margin (inches)" 
+                    label="Left Margin" 
                     type="number" 
                     value={leftMargin} 
                     step="0.0001" 
-                    disabled>
+                    data-field="leftMargin"
+                    onchange={handleInputChange}>
                 </lightning-input>
 
                 <!-- Right Margin -->
                 <lightning-input 
-                    label="Right Margin (inches)" 
+                    label="Right Margin" 
                     type="number" 
                     value={rightMargin} 
                     step="0.0001" 
-                    disabled>
+                    data-field="rightMargin"
+                    onchange={handleInputChange}>
                 </lightning-input>
 
                 <!-- Corner Radius -->
                 <lightning-input 
-                    label="Corner Radius (inches)" 
+                    label="Corner Radius" 
                     type="number" 
                     value={cornerRadius} 
                     step="0.0001" 
-                    disabled>
+                    data-field="cornerRadius"
+                    onchange={handleInputChange}>
                 </lightning-input>
 
                 <!-- Two fields side by side using flexbox -->

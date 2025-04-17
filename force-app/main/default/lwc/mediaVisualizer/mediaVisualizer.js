@@ -13,6 +13,11 @@ export default class MediaVisualizer extends LightningElement {
     shape = 'Square/Rectangle'; // Default shape for label
     standardPerforation = 'Yes'; // Default value for standard perforation
     sensingDetails = ''; // No default sensing details
+    measurementUnit = 'Inches'; // Default to Inches
+    measurementUnitOptions = [
+        { label: 'Inches', value: 'Inches' },
+        { label: 'Millimeters', value: 'Millimeters' }
+    ];
 
     // Options for comboboxes
     mediaTypeOptions = [
@@ -73,8 +78,14 @@ export default class MediaVisualizer extends LightningElement {
             return;
         }
 
-        // Handle checkbox input differently since it uses 'checked' instead of 'value'
-        if (event.target.type === 'checkbox') {
+        // Handle measurement unit changes
+        if (fieldName === 'measurementUnit') {
+            const newUnit = event.detail ? event.detail.value : event.target.value;
+            if (newUnit !== this.measurementUnit) {
+                this.convertAllFields(newUnit);
+                this.measurementUnit = newUnit;
+            }
+        } else if (event.target.type === 'checkbox') {
             this[fieldName] = event.target.checked;
         } else {
             // Update the field value directly for other input types
@@ -101,6 +112,25 @@ export default class MediaVisualizer extends LightningElement {
         }
     }
 
+    // Converts all relevant fields between inches and millimeters
+    convertAllFields(newUnit) {
+        const fields = ['width', 'length', 'gapDown', 'leftMargin', 'rightMargin', 'cornerRadius'];
+        const factor = 25.4;
+        if (newUnit === 'Millimeter' && this.measurementUnit === 'Inches') {
+            fields.forEach(f => {
+                if (this[f] != null && this[f] !== '') {
+                    this[f] = parseFloat((parseFloat(this[f]) * factor).toFixed(4));
+                }
+            });
+        } else if (newUnit === 'Inches' && this.measurementUnit === 'Millimeter') {
+            fields.forEach(f => {
+                if (this[f] != null && this[f] !== '') {
+                    this[f] = parseFloat((parseFloat(this[f]) / factor).toFixed(4));
+                }
+            });
+        }
+    }
+
     // Handles the Render Design button click
     handleRenderDesign() {
         console.log(`Width: ${this.width}, Length: ${this.length}`);
@@ -119,7 +149,7 @@ export default class MediaVisualizer extends LightningElement {
             return;
         }
 
-        const scaleFactor = 96; // Scale factor for rendering (1 inch = 96 pixels)
+        const scaleFactor = this.measurementUnit === 'Inches' ? 96 : 96 / 25.4;
 
         // Correctly calculate liner dimensions: width is horizontal, length is vertical
         const linerWidth = this.width * scaleFactor; // Width becomes the horizontal dimension
@@ -146,12 +176,17 @@ export default class MediaVisualizer extends LightningElement {
             return;
         }
         
-        // Determine number of labels/tags to display based on length
+        // Determine number of labels/tags to display based on length and unit
         let numLabelsToShow = 3; // Default
-        if (this.length > 5) {
-            numLabelsToShow = 1; // Show only 1 label/tag if length > 5 inches
-        } else if (this.length > 3) {
-            numLabelsToShow = 2; // Show 2 labels/tags if length > 3 inches but <= 5 inches
+        
+        // Adjust thresholds based on measurement unit
+        const lengthThreshold1 = this.measurementUnit === 'Inches' ? 5 : 5 * 25.4; // 5 inches or ~127 mm
+        const lengthThreshold2 = this.measurementUnit === 'Inches' ? 3 : 3 * 25.4; // 3 inches or ~76.2 mm
+        
+        if (this.length > lengthThreshold1) {
+            numLabelsToShow = 1; // Show only 1 label/tag if length > threshold1
+        } else if (this.length > lengthThreshold2) {
+            numLabelsToShow = 2; // Show 2 labels/tags if length > threshold2 but <= threshold1
         }
         // Otherwise show 3 labels/tags (default)
         

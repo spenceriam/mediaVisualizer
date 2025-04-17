@@ -1,9 +1,10 @@
 /* Styles for the form fields */
 .form {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); /* Defines 4 equal columns */
+    grid-template-columns: repeat(5, 1fr); /* 5 equal columns */
     gap: 20px; /* Adds spacing between fields */
     padding: 20px; /* Adds padding around the form */
+    align-items: start; /* Aligns items at the start */
 }
 
 /* Input fields and dropdowns */
@@ -12,9 +13,16 @@
     width: 100%; /* Ensures each field spans its grid cell */
 }
 
+/* Measurement unit radio group */
+.lightning-radio-group {
+    margin-bottom: 0; /* Removes bottom margin */
+    margin-top: -10px; /* Reduces top margin */
+    grid-column: span 5; /* Makes the radio group span all 5 columns */
+}
+
 /* Render Design Button Row */
 .render-button {
-    grid-column: span 4; /* Makes the button span all 4 columns */
+    grid-column: span 5; /* Makes the button span all 5 columns */
     text-align: center; /* Centers the button horizontally */
     margin-top: 20px; /* Adds spacing above the button */
 }

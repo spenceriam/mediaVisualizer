@@ -10,7 +10,8 @@ MediaVisual is a tool designed to help visualize different types of media (Label
 
 - **Media Type Selection**: Choose between Label and Tag types
 - **Finished Format Options**: Specify Roll or Fanfold formats
-- **Customizable Dimensions**: Set precise width and length measurements (in inches)
+- **Measurement Units**: Toggle between Inches and Millimeters for all dimensions
+- **Customizable Dimensions**: Set precise width and length measurements
 - **Label-specific Settings**: 
   - Shape selection (Square/Rectangle, Circular/Oval, Jewelry/Rat-tail, Other)
   - Gap Down, Left Margin, Right Margin, and Corner Radius specifications
@@ -18,11 +19,12 @@ MediaVisual is a tool designed to help visualize different types of media (Label
   - Sensing details selection (Black Sensing Mark, Left and Right Notches, Left only Notch, Right only Notch, Central Sensing Slot)
 - **Standard Perforation Option**: Choose whether to display standard perforations
 - **Multiple Label/Tag Display**: Shows 1-3 labels/tags based on length:
-  - 3 labels/tags when length ≤ 3 inches
-  - 2 labels/tags when length > 3 inches but ≤ 5 inches
-  - 1 label/tag when length > 5 inches
+  - 3 labels/tags when length ≤ 3 inches (or 76.2 mm)
+  - 2 labels/tags when length > 3 inches (or 76.2 mm) but ≤ 5 inches (or 127 mm)
+  - 1 label/tag when length > 5 inches (or 127 mm)
 - **Dynamic Visualization**: Real-time rendering of media with proper proportions and appearance
 - **Responsive Design**: Properly scaled visualization that works across different screen sizes
+- **Automatic Unit Conversion**: Values automatically convert when switching between inches and millimeters
 
 ## Visual Representation
 
@@ -41,10 +43,11 @@ MediaVisual is a tool designed to help visualize different types of media (Label
 
 1. Select a Media Type (Label or Tag)
 2. Choose a Finished Format
-3. Enter the Width and Length measurements (in inches)
-4. If Label is selected, choose a Shape type and set Standard Perforation (Yes/No)
-5. If Tag is selected, choose a Sensing Details option
-6. Click "Render Design" to visualize the media
+3. Select your preferred Measurement Unit (Inches or Millimeters)
+4. Enter the Width and Length measurements
+5. If Label is selected, choose a Shape type and set Standard Perforation (Yes/No)
+6. If Tag is selected, choose a Sensing Details option
+7. Click "Render Design" to visualize the media
 
 ## Technical Details
 
@@ -65,10 +68,13 @@ The component uses:
 ## Implementation Notes
 
 - The visualization is for reference only and includes a disclaimer that it's not to actual scale
-- All dimensions are converted from inches to pixels using a scaling factor of 96 (1 inch = 96 pixels)
+- Dimensions are converted from user units to pixels using the appropriate scaling factor:
+  - For inches: 1 inch = 96 pixels
+  - For millimeters: 1 mm = 96/25.4 ≈ 3.78 pixels
 - Fixed padding ensures consistent layout across different dimension settings
 - Dynamic bottom padding adjusts for narrow visualizations where text may wrap
 - Sensing details for tags are rendered as cutouts or bars with specific positioning relative to perforation lines
+- Unit conversion applies a factor of 25.4 (1 inch = 25.4 mm) when switching between units
 
 ## Development
 
