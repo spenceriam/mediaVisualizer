@@ -49,7 +49,7 @@ The component uses:
 This project is developed using Salesforce DX. You can deploy it to a Salesforce org using:
 
 ```bash
-sfdx force:source:deploy -p force-app
+sf deploy metadata --source-dir force-app --verbose
 ```
 
 ## Disclaimer
